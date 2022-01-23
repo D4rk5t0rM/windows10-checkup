@@ -1,10 +1,11 @@
 @ECHO OFF
 ECHO. Original Work from PEASS Project https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite
 ECHO. Heavily modified by Chris Titus Tech
+ECHO. Automation modifications by D4rk5t0rM
 ECHO.
 ECHO./^^!\ Advisory: WinPEAS - Windows local Privilege Escalation Awesome Script
 ECHO.
-CALL :ColorLine " WINDOWS OS"
+ECHO " WINDOWS OS"
 ECHO.   [i] Check for vulnerabilities for the OS version with the applied patches
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#kernel-exploits
 systeminfo
@@ -62,26 +63,26 @@ IF "%expl%" == "yes" IF errorlevel 1 ECHO.MS13-053 patch is NOT installed! (Vuln
 IF "%expl%" == "yes" wmic qfe get Caption,Description,HotFixID,InstalledOn | findstr /C:"KB2870008" 1>NUL
 IF "%expl%" == "yes" IF errorlevel 1 ECHO.MS13-081 patch is NOT installed! (Vulns: 7SP0/SP1_x86-track_popup_menu)
 ECHO.
-CALL :ColorLine " UAC Settings"
+ECHO " UAC Settings"
 ECHO.   [i] If the results read ENABLELUA REG_DWORD 0x1, part or all of the UAC components are on
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#basic-uac-bypass-full-file-system-access
 REG QUERY HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ /v EnableLUA 2>nul
 ECHO.
-CALL :ColorLine " Registered Anti-Virus(AV)"
+ECHO " Registered Anti-Virus(AV)"
 WMIC /Node:localhost /Namespace:\\root\SecurityCenter2 Path AntiVirusProduct Get displayName /Format:List | more 
 ECHO.Checking for defender whitelisted PATHS
 reg query "HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths" 2>nul
 
-CALL :ColorLine " MOUNTED DISKS"
+ECHO " MOUNTED DISKS"
 ECHO.   [i] Maybe you find something interesting
 (wmic logicaldisk get caption 2>nul | more) || (fsutil fsinfo drives 2>nul)
 ECHO.
-CALL :ColorLine " ENVIRONMENT"
+ECHO " ENVIRONMENT"
 ECHO.   [i] Interesting information?
 ECHO.
 set
 ECHO.
-CALL :ColorLine " INSTALLED SOFTWARE"
+ECHO " INSTALLED SOFTWARE"
 ECHO.   [i] Some weird software? Check for vulnerabilities in unknow software installed
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#software
 ECHO.
@@ -89,7 +90,7 @@ reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /s | findstr 
 reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ /s | findstr InstallLocation | findstr ":\\"
 IF exist C:\Windows\CCM\SCClient.exe ECHO.SCCM is installed (installers are run with SYSTEM privileges, many are vulnerable to DLL Sideloading)
 ECHO.
-CALL :ColorLine " RUNNING PROCESSES"
+ECHO " RUNNING PROCESSES"
 ECHO.   [i] Something unexpected is running? Check for vulnerabilities
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#running-processes
 tasklist /SVC
@@ -106,7 +107,7 @@ for /f "tokens=2 delims='='" %%x in ('wmic process list full^|find /i "executabl
 	icacls "%%~dpy\" 2>nul | findstr /i "(F) (M) (W) :\\" | findstr /i ":\\ everyone authenticated users todos %username%" && ECHO.
 )
 ECHO.
-CALL :ColorLine " RUN AT STARTUP"
+ECHO " RUN AT STARTUP"
 ECHO.   [i] Check if you can modify any binary that is going to be executed by admin or if you can impersonate a not found binary
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#run-at-startup
 reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run 2>nul & ^
@@ -123,64 +124,64 @@ icacls "%appdata%\Microsoft\Windows\Start Menu\Programs\Startup" 2>nul | findstr
 icacls "%appdata%\Microsoft\Windows\Start Menu\Programs\Startup\*" 2>nul | findstr /i "(F) (M) (W) :\" | findstr /i ":\\ everyone authenticated users todos %username%" && ECHO. & ^
 schtasks /query /fo TABLE /nh | findstr /v /i "disable deshab informa")
 ECHO.
-CALL :ColorLine " AlwaysInstallElevated?"
+ECHO " AlwaysInstallElevated?"
 ECHO.   [i] If '1' then you can install a .msi file with admin privileges ;)
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#alwaysinstallelevated
 reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated 2> nul
 reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated 2> nul
 ECHO.
 
-CALL :ColorLine " CURRENT SHARES"
+ECHO " CURRENT SHARES"
 net share
 ECHO.
-CALL :ColorLine " INTERFACES"
+ECHO " INTERFACES"
 ipconfig  /all
 ECHO.
-CALL :ColorLine " USED PORTS"
+ECHO " USED PORTS"
 ECHO.   [i] Check for services restricted from the outside
 netstat -ano | findstr /i listen
 ECHO.
-CALL :ColorLine " FIREWALL"
+ECHO " FIREWALL"
 netsh firewall show state
 netsh firewall show config
 ECHO.
-CALL :ColorLine " ROUTES"
+ECHO " ROUTES"
 route print
 ECHO.
-CALL :ColorLine " Hosts file"
+ECHO " Hosts file"
 type C:\WINDOWS\System32\drivers\etc\hosts | findstr /v "^#"
-CALL :ColorLine " DNS CACHE"
+ECHO " DNS CACHE"
 ipconfig /displaydns | findstr "Record" | findstr "Name Host"
 ECHO.
-CALL :ColorLine " BASIC USER INFO
+ECHO " BASIC USER INFO
 ECHO.   [i] Check if you are inside the Administrators group or if you have enabled any token that can be use to escalate privileges like SeImpersonatePrivilege, SeAssignPrimaryPrivilege, SeTcbPrivilege, SeBackupPrivilege, SeRestorePrivilege, SeCreateTokenPrivilege, SeLoadDriverPrivilege, SeTakeOwnershipPrivilege, SeDebbugPrivilege
 ECHO.   [?] https://book.hacktricks.xyz/windows/windows-local-privilege-escalation#users-and-groups
 ECHO.
-CALL :ColorLine " CURRENT USER"
+ECHO " CURRENT USER"
 net user %username%
 net user %USERNAME% /domain 2>nul
 whoami /all
 ECHO.
-CALL :ColorLine " USERS"
+ECHO " USERS"
 net user
 ECHO.
-CALL :ColorLine " GROUPS"
+ECHO " GROUPS"
 net localgroup
 ECHO.
-CALL :ColorLine " ADMINISTRATORS GROUPS"
+ECHO " ADMINISTRATORS GROUPS"
 REM seems to be localised
 net localgroup Administrators 2>nul
 net localgroup Administradores 2>nul
 ECHO. 
-CALL :ColorLine " CURRENT LOGGED USERS"
+ECHO " CURRENT LOGGED USERS"
 quser
 ECHO. 
 :CurrentClipboard
-CALL :ColorLine " CURRENT CLIPBOARD"
+ECHO " CURRENT CLIPBOARD"
 ECHO.   [i] Any password inside the clipboard?
 powershell -command "Get-Clipboard" 2>nul
 ECHO.
-CALL :ColorLine " Unattended files"
+ECHO " Unattended files"
 IF EXIST %WINDIR%\sysprep\sysprep.xml ECHO.%WINDIR%\sysprep\sysprep.xml exists. 
 IF EXIST %WINDIR%\sysprep\sysprep.inf ECHO.%WINDIR%\sysprep\sysprep.inf exists. 
 IF EXIST %WINDIR%\sysprep.inf ECHO.%WINDIR%\sysprep.inf exists. 
@@ -194,7 +195,7 @@ IF EXIST %WINDIR%\..\unattend.txt ECHO.%WINDIR%\..\unattend.txt exists.
 IF EXIST %WINDIR%\..\unattend.inf ECHO.%WINDIR%\..\unattend.inf exists. 
 ECHO.
 
-CALL :ColorLine " SAM and SYSTEM backups"
+ECHO " SAM and SYSTEM backups"
 IF EXIST %WINDIR%\repair\SAM ECHO.%WINDIR%\repair\SAM exists. 
 IF EXIST %WINDIR%\System32\config\RegBack\SAM ECHO.%WINDIR%\System32\config\RegBack\SAM exists.
 IF EXIST %WINDIR%\System32\config\SAM ECHO.%WINDIR%\System32\config\SAM exists.
@@ -204,13 +205,5 @@ IF EXIST %WINDIR%\System32\config\RegBack\SYSTEM ECHO.%WINDIR%\System32\config\R
 ECHO.
 
 Echo All Done! 
-pause
 EXIT
 :EOF
-
-:::-Subroutines
-
-:ColorLine
-ECHO %~1
-PAUSE >nul 
-EXIT /B
